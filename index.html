@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f8f9fb" />
+    <meta
+      name="description"
+      content="좋아하는 AI 대화와 문장을 나만의 이미지로. 텍스트, 사진, 글꼴을 편집하고 PNG로 저장하세요."
+    />
+    <title>LogLog — 문장을 이미지로</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./tokens.css" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./engine.js" defer></script>
+    <script src="./app.js" defer></script>
+  </head>
+  <body>
+    <header class="app-header">
+      <a class="brand" href="./" aria-label="LogLog 홈"
+        ><svg viewBox="0 0 28 32" aria-hidden="true">
+          <path d="M5 3h18v26l-9-6-9 6z" /></svg
+        ><span>LogLog</span></a
+      >
+      <span class="header-note">간직하고 싶은 대화의 한 장면</span>
+      <button class="primary" id="download">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" /></svg
+        ><span>PNG 저장</span>
+      </button>
+    </header>
+    <main class="workspace">
+      <section class="stage" aria-label="이미지 미리보기">
+        <div class="stage-toolbar">
+          <h1>미리보기</h1>
+          <div class="stage-actions">
+            <span id="dimensions">준비 중</span
+            ><button id="expand" class="quiet">크게 보기</button>
+          </div>
+        </div>
+        <div class="canvas-area" id="canvas-area">
+          <canvas
+            id="preview"
+            width="720"
+            height="720"
+            role="img"
+            aria-label="입력한 문장의 이미지 미리보기"
+          ></canvas>
+          <div class="empty-state" id="empty-state" hidden>
+            <h2>어떤 장면을 남길까요?</h2>
+            <p>본문에 대화를 붙여넣으면<br />이곳에서 바로 확인할 수 있어요.</p>
+          </div>
+        </div>
+        <div class="stage-bottom">
+          <div class="pagination" id="pagination" hidden>
+            <button id="previous" aria-label="이전 페이지">이전</button
+            ><span id="page-info"></span
+            ><button id="next" aria-label="다음 페이지">다음</button>
+          </div>
+          <p id="preview-note">
+            예시 문장 · 본문을 바꿔 나만의 장면을 만들어보세요.
+          </p>
+        </div>
+      </section>
+      <aside class="editor" aria-label="이미지 편집">
+        <div class="tabs" role="tablist" aria-label="편집 도구">
+          <button
+            id="tab-content"
+            role="tab"
+            aria-selected="true"
+            aria-controls="panel-content"
+            tabindex="0"
+          >
+            내용</button
+          ><button
+            id="tab-design"
+            role="tab"
+            aria-selected="false"
+            aria-controls="panel-design"
+            tabindex="-1"
+          >
+            디자인</button
+          ><button
+            id="tab-export"
+            role="tab"
+            aria-selected="false"
+            aria-controls="panel-export"
+            tabindex="-1"
+          >
+            내보내기
+          </button>
+        </div>
+        <div class="editor-scroll">
+          <section
+            id="panel-content"
+            role="tabpanel"
+            aria-labelledby="tab-content"
+          >
+            <div class="section-title">
+              <h2><label for="body-text">남기고 싶은 문장</label></h2>
+              <button id="clear-text" class="text-button">비우기</button>
+            </div>
+            <textarea
+              id="body-text"
+              rows="11"
+              maxlength="60000"
+              placeholder="AI 대화나 소설의 한 장면을 붙여넣으세요."
+              spellcheck="false"
+            ></textarea>
+            <div class="text-tools">
+              <div class="format-buttons">
+                <button data-format="**" aria-label="선택한 텍스트 굵게">
+                  <b>B</b></button
+                ><button data-format="*" aria-label="선택한 텍스트 기울임">
+                  <i>I</i></button
+                ><button data-format="> " aria-label="선택한 텍스트 인용">
+                  “ ”
+                </button>
+              </div>
+              <span id="char-count">0자</span>
+            </div>
+            <p class="help">
+              빈 줄로 문단을 나눌 수 있어요. **굵게**, *기울임*도 지원합니다.
+            </p>
+            <div class="section-title spaced">
+              <h2>함께 남길 정보</h2>
+              <label class="check"
+                ><input type="checkbox" id="metadata-on" checked />표시</label
+              >
+            </div>
+            <div class="metadata-fields">
+              <label class="meta-label" for="meta-bot">봇</label
+              ><input
+                id="meta-bot"
+                type="text"
+                maxlength="120"
+                placeholder="봇 이름"
+              /><input
+                type="checkbox"
+                id="show-bot"
+                checked
+                aria-label="봇 표시"
+              />
+              <label class="meta-label" for="meta-model">모델</label
+              ><input
+                id="meta-model"
+                type="text"
+                maxlength="160"
+                placeholder="모델 이름"
+              /><input
+                type="checkbox"
+                id="show-model"
+                checked
+                aria-label="모델 표시"
+              />
+              <label class="meta-label" for="meta-free">자유란</label
+              ><input
+                id="meta-free"
+                type="text"
+                maxlength="300"
+                placeholder="날짜, 에피소드, 짧은 메모"
+              /><input
+                type="checkbox"
+                id="show-free"
+                checked
+                aria-label="자유란 표시"
+              />
+            </div>
+            <label class="check divider-check"
+              ><input type="checkbox" id="divider" checked />본문과 정보 사이
+              구분선</label
+            >
+            <details class="section-details">
+              <summary>찾기 · 바꾸기</summary>
+              <p class="help">
+                이름이나 단어를 한 번에 바꿔보세요. 규칙은 위에서부터
+                적용됩니다.
+              </p>
+              <div id="rules"></div>
+              <button class="text-button" id="add-rule">+ 규칙 추가</button>
+              <div class="button-row">
+                <button id="replace">전체 적용</button
+                ><button id="undo-replace" disabled>되돌리기</button>
+              </div>
+              <p class="help" id="replace-result" role="status"></p>
+            </details>
+          </section>
+          <section
+            id="panel-design"
+            role="tabpanel"
+            aria-labelledby="tab-design"
+            hidden
+          >
+            <div class="section-title">
+              <h2>장면의 분위기</h2>
+              <button id="reset-style" class="text-button">기본값</button>
+            </div>
+            <div id="presets" class="presets" aria-label="기본 스타일"></div>
+            <details class="section-details" open>
+              <summary>배경</summary>
+              <label class="field-label" for="background">배경 유형</label
+              ><select id="background" data-style="background">
+                <option value="gradient">그라데이션</option>
+                <option value="solid">단색</option>
+                <option value="photo">내 사진</option>
+              </select>
+              <div id="colors" class="two-fields">
+                <label class="color-field"
+                  >시작 색<input
+                    type="color"
+                    id="color1"
+                    data-style="color1" /></label
+                ><label class="color-field" id="end-color"
+                  >끝 색<input type="color" id="color2" data-style="color2"
+                /></label>
+              </div>
+              <div class="photo-controls">
+                <label for="photo" class="upload-button"
+                  ><svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 4h16v16H4zM4 16l5-5 4 4 3-3 4 4" />
+                    <circle cx="15" cy="8" r="1" /></svg
+                  >배경 사진 가져오기</label
+                ><input
+                  id="photo"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  class="visually-hidden"
+                />
+                <div class="photo-info">
+                  <span id="photo-name">PNG, JPG, WebP · 최대 20MB</span
+                  ><button id="remove-photo" class="text-button" hidden>
+                    제거
+                  </button>
+                </div>
+              </div>
+              <div class="two-fields">
+                <div>
+                  <label class="field-label" for="texture">질감</label
+                  ><select id="texture" data-style="texture">
+                    <option value="none">없음</option>
+                    <option value="grain">그레인</option>
+                    <option value="stars">별빛</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="field-label" for="overlay"
+                    >어둡게 <output id="overlay-value"></output></label
+                  ><input
+                    type="range"
+                    id="overlay"
+                    data-style="overlay"
+                    min="0"
+                    max="0.85"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+            </details>
+            <details class="section-details" open>
+              <summary>글자와 여백</summary>
+              <div class="two-fields">
+                <div>
+                  <label class="field-label" for="font">글꼴</label
+                  ><select id="font" data-style="font">
+                    <option value="serif">명조 · Noto Serif</option>
+                    <option value="sans">고딕 · Noto Sans</option>
+                    <option value="rounded">둥근 · 주아</option>
+                    <option value="mono">고정폭 · 나눔고딕코딩</option>
+                  </select>
+                </div>
+                <label class="color-field text-color"
+                  >글자 색<input
+                    type="color"
+                    id="textColor"
+                    data-style="textColor"
+                /></label>
+              </div>
+              <div id="sliders"></div>
+              <fieldset class="alignment">
+                <legend>정렬</legend>
+                <label
+                  ><input
+                    type="radio"
+                    name="align"
+                    value="left"
+                    checked
+                  />왼쪽</label
+                ><label
+                  ><input
+                    type="radio"
+                    name="align"
+                    value="center"
+                  />가운데</label
+                >
+              </fieldset>
+            </details>
+            <details class="section-details">
+              <summary>내 스타일</summary>
+              <p class="help">
+                글꼴·색상·여백을 저장합니다. 본문과 사진은 포함하지 않습니다.
+              </p>
+              <div class="save-style">
+                <input
+                  id="preset-name"
+                  maxlength="40"
+                  aria-label="저장할 스타일 이름"
+                  placeholder="스타일 이름"
+                /><button id="save-preset">저장</button>
+              </div>
+              <div id="user-presets"></div>
+              <div class="button-row">
+                <button id="import-presets">가져오기</button
+                ><button id="export-presets">내보내기</button>
+              </div>
+              <input
+                type="file"
+                id="preset-file"
+                accept="application/json,.json"
+                hidden
+              />
+            </details>
+          </section>
+          <section
+            id="panel-export"
+            role="tabpanel"
+            aria-labelledby="tab-export"
+            hidden
+          >
+            <div class="section-title"><h2>이미지 저장 설정</h2></div>
+            <label class="field-label" for="output-mode">긴 글 처리</label
+            ><select id="output-mode">
+              <option value="long">한 장으로 길게</option>
+              <option value="pages">여러 장으로 나누기</option>
+            </select>
+            <p class="help">
+              문단과 줄 사이에서 나눕니다. 긴 문단은 다음 장에 이어집니다.
+            </p>
+            <label class="field-label" for="scale">이미지 해상도</label
+            ><select id="scale">
+              <option value="1">기본 · 가로 720px</option>
+              <option value="2" selected>선명하게 · 가로 1440px</option>
+            </select>
+            <div class="export-summary">
+              <h3>보이는 그대로 저장돼요</h3>
+              <p>
+                배경, 문장, 하단 정보를 함께 담은 PNG 이미지로 저장합니다. 여러
+                장일 때는 ZIP 파일로 한 번에 받을 수 있어요.
+              </p>
+              <button id="download-all" class="primary">전체 저장</button
+              ><button id="share" hidden>이미지 공유</button>
+            </div>
+            <p class="privacy-note">
+              본문과 사진은 서버로 전송하지 않습니다. 새로고침하면 지워지며,
+              디자인 설정과 내 스타일만 이 브라우저에 저장됩니다.
+            </p>
+          </section>
+        </div>
+        <footer class="editor-footer">
+          <span>문장은 당신의 브라우저 안에만.</span
+          ><button id="restore-demo" class="text-button">예시 넣기</button>
+        </footer>
+      </aside>
+    </main>
+    <div id="notice" role="status" aria-live="polite" hidden></div>
+    <dialog id="full-preview">
+      <div class="dialog-head">
+        <h2>크게 보기</h2>
+        <button id="close-preview">닫기</button>
+      </div>
+      <div id="full-canvas"></div>
+    </dialog>
+    <noscript
+      >이미지 편집기를 사용하려면 브라우저의 JavaScript를 켜주세요.</noscript
+    >
+  </body>
+</html>

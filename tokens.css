@@ -1,0 +1,18 @@
+:root {
+  --color-ink: #202b3c;
+  --color-muted: #586679;
+  --color-paper: #ffffff;
+  --color-stage: #e9edf2;
+  --color-soft: #f5f7fa;
+  --color-line: #dbe1e8;
+  --color-accent: #315ac9;
+  --color-accent-hover: #2549aa;
+  --color-tint: #edf2ff;
+  --color-danger: #b02c3b;
+  --color-shadow: #17223620;
+  --color-selection: #cfdcff;
+  --font-ui: "Log Sans", "Malgun Gothic", system-ui, sans-serif;
+  --font-book: "Log Serif", "Batang", serif;
+  --radius-control: 7px;
+  --radius-panel: 12px;
+}
