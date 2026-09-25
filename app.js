@@ -5,6 +5,29 @@
   const DEMO =
     "“돌아오지 않을 줄 알았어.”\n\n그는 대답 대신 젖은 우산을 접었다. 문틈으로 들어온 저녁 바람이 탁자 위의 책장을 조용히 넘겼다. 마지막으로 만났던 날에도, 우리는 같은 페이지를 읽고 있었다.\n\n“아직 돌려주지 못한 이야기가 있어서.”\n\n나는 그제야 빈 의자를 당겼다. 오래 기다린 말들은 이상하게도, 입 밖으로 꺼내는 순간 가장 평범한 인사가 되었다.";
   const KEY = "loglog.styles.v1";
+  const FONT_INFO = {
+    ridibatang: {
+      description:
+        "긴 문장을 읽기 편한 전자책용 바탕체. 굵게는 브라우저가 표현합니다.",
+      source: "https://noonnu.cc/font_page/324",
+    },
+    gowun: {
+      description: "부드러운 획의 바탕체. 차분한 서술과 대사에 어울려요.",
+      source: "https://noonnu.cc/font_page/733",
+    },
+    pretendard: {
+      description: "단정한 고딕체. 한글과 영문이 섞인 대화에 추천해요.",
+      source: "https://noonnu.cc/font_page/694",
+    },
+    suit: {
+      description: "간결한 고딕체. 숫자와 문장부호가 많은 대화에 어울려요.",
+      source: "https://noonnu.cc/font_page/845",
+    },
+    serif: { description: "기존의 정갈한 명조체입니다." },
+    sans: { description: "기존의 기본 고딕체입니다." },
+    rounded: { description: "둥근 글꼴로 짧고 경쾌한 문장에 어울려요." },
+    mono: { description: "모든 글자의 폭이 일정한 글꼴입니다." },
+  };
   let state = { style: { ...E.DEFAULT }, presets: [] },
     photo = null,
     photoVersion = 0,
@@ -110,6 +133,11 @@
     );
   }
   function sync() {
+    const info = FONT_INFO[state.style.font];
+    $("font-description").textContent = info.description;
+    $("font-source").hidden = !info.source;
+    if (info.source) $("font-source").href = info.source;
+    else $("font-source").removeAttribute("href");
     document
       .querySelectorAll("[data-style]")
       .forEach((input) => (input.value = state.style[input.dataset.style]));
@@ -166,14 +194,31 @@
   const fontPromises = new Map();
   async function ensureFonts(key) {
     if (!fontPromises.has(key)) {
-      const family = E.FONTS[key].split(",")[0];
-      const weights = key === "rounded" ? [400] : [400, 700];
+      // Load the bundled fallback too: SUIT's compact Hangul set does not
+      // contain every syllable. Both preview and PNG must measure ready faces.
+      const families = E.FONTS[key]
+        .match(/"[^"]+"/g)
+        .filter((family) => family !== '"Malgun Gothic"');
       fontPromises.set(
         key,
         Promise.all(
-          weights.map((weight) =>
-            document.fonts.load(`${weight} 25px ${family}`, "한글 가나 ABC"),
-          ),
+          families.flatMap((family) => {
+            const weights =
+              family === '"RIDIBatang"' || family === '"Log Rounded"'
+                ? [400]
+                : [400, 700];
+            return weights.map(async (weight) => {
+              const faces = await document.fonts.load(
+                `${weight} 25px ${family}`,
+                "한글 가나 ABC",
+              );
+              if (!faces.length)
+                throw new Error(
+                  "글꼴을 불러오지 못했습니다. 새로고침하거나 다른 글꼴을 선택해주세요.",
+                );
+              return faces;
+            });
+          }),
         ).catch((error) => {
           fontPromises.delete(key);
           throw error;

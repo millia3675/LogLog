@@ -8,7 +8,7 @@
     color2: "#46516c",
     texture: "none",
     overlay: 0.05,
-    font: "serif",
+    font: "ridibatang",
     fontSize: 25,
     lineHeight: 1.85,
     paragraphGap: 0.65,
@@ -18,6 +18,10 @@
     cornerRadius: 0,
   };
   const FONTS = {
+    ridibatang: '"RIDIBatang", "Log Serif", Batang, serif',
+    gowun: '"Gowun Batang", "Log Serif", Batang, serif',
+    pretendard: '"Pretendard", "Log Sans", "Malgun Gothic", sans-serif',
+    suit: '"SUIT", "Log Sans", "Malgun Gothic", sans-serif',
     serif: '"Log Serif", Batang, serif',
     sans: '"Log Sans", "Malgun Gothic", sans-serif',
     rounded: '"Log Rounded", sans-serif',
@@ -58,7 +62,7 @@
         color2: "#bfcfda",
         textColor: "#283e4b",
         overlay: 0,
-        font: "sans",
+        font: "pretendard",
       },
     },
     {

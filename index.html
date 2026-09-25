@@ -262,10 +262,20 @@
                 <div>
                   <label class="field-label" for="font">글꼴</label
                   ><select id="font" data-style="font">
-                    <option value="serif">명조 · Noto Serif</option>
-                    <option value="sans">고딕 · Noto Sans</option>
-                    <option value="rounded">둥근 · 주아</option>
-                    <option value="mono">고정폭 · 나눔고딕코딩</option>
+                    <optgroup label="소설에 어울리는 바탕체">
+                      <option value="ridibatang">리디바탕 · 추천</option>
+                      <option value="gowun">고운바탕</option>
+                    </optgroup>
+                    <optgroup label="대화에 어울리는 고딕체">
+                      <option value="pretendard">프리텐다드</option>
+                      <option value="suit">SUIT · 수트</option>
+                    </optgroup>
+                    <optgroup label="기존 글꼴">
+                      <option value="serif">명조 · Noto Serif</option>
+                      <option value="sans">고딕 · Noto Sans</option>
+                      <option value="rounded">둥근 · 주아</option>
+                      <option value="mono">고정폭 · 나눔고딕코딩</option>
+                    </optgroup>
                   </select>
                 </div>
                 <label class="color-field text-color"
@@ -275,6 +285,16 @@
                     data-style="textColor"
                 /></label>
               </div>
+              <p class="help font-help">
+                <span id="font-description"></span>
+                <a
+                  id="font-source"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  hidden
+                  >눈누에서 보기</a
+                >
+              </p>
               <div id="sliders"></div>
               <fieldset class="alignment">
                 <legend>정렬</legend>

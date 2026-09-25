@@ -1,6 +1,48 @@
 /* Hallmark · macrostructure: image workbench · tone: quiet editorial · anchor hue: cobalt */
 /* Hallmark · pre-emit critique: P4 H4 E4 S5 R5 V4 */
 @font-face {
+  font-family: "RIDIBatang";
+  src: url("./fonts/RIDIBatang-Regular.woff") format("woff");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Gowun Batang";
+  src: url("./fonts/GowunBatang-Regular.woff") format("woff");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Gowun Batang";
+  src: url("./fonts/GowunBatang-Bold.woff") format("woff");
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Pretendard";
+  src: url("./fonts/Pretendard-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Pretendard";
+  src: url("./fonts/Pretendard-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "SUIT";
+  src: url("./fonts/SUIT-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "SUIT";
+  src: url("./fonts/SUIT-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
   font-family: "Log Sans";
   src: url("./fonts/noto-sans-kr-400.woff2") format("woff2");
   font-weight: 400;
@@ -312,6 +354,13 @@ svg {
   display: block;
   font-size: 13px;
   margin: 14px 0 8px;
+}
+.font-help {
+  margin-bottom: 4px;
+}
+.font-help a {
+  color: var(--color-accent);
+  text-underline-offset: 3px;
 }
 textarea,
 input[type="text"],
