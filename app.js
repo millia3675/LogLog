@@ -143,7 +143,11 @@
         input.checked = state.style[input.dataset.style];
       else input.value = state.style[input.dataset.style];
     });
-    $("dialogueColor").disabled = !state.style.dialogueHighlight;
+    $("dialogueAutoColor").disabled = !state.style.dialogueHighlight;
+    $("dialogueColor").disabled =
+      !state.style.dialogueHighlight || state.style.dialogueAutoColor;
+    if (state.style.dialogueAutoColor)
+      $("dialogueColor").value = E.dialogueThemeColor(state.style, photo);
     for (const [key] of sliders) $(key + "-number").value = state.style[key];
     document
       .querySelectorAll('[name="align"]')
@@ -155,13 +159,18 @@
     drawPresetButtons();
   }
   function drawPresetButtons() {
+    const withoutDialogue = (style) => {
+      const { dialogueHighlight, dialogueColor, dialogueAutoColor, ...base } =
+        E.normalize(style);
+      return base;
+    };
     for (const button of $("presets").children) {
       const preset = E.PRESETS.find((p) => p.id === button.dataset.id);
       button.setAttribute(
         "aria-pressed",
         String(
-          JSON.stringify(E.normalize(preset.style)) ===
-            JSON.stringify(state.style),
+          JSON.stringify(withoutDialogue(preset.style)) ===
+            JSON.stringify(withoutDialogue(state.style)),
         ),
       );
     }
@@ -187,7 +196,10 @@
     label.textContent = preset.name;
     button.append(canvas, label);
     button.addEventListener("click", () => {
-      state.style = E.normalize(preset.style);
+      state.style = E.normalize({
+        ...preset.style,
+        dialogueHighlight: state.style.dialogueHighlight,
+      });
       sync();
       persist();
       schedule();

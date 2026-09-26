@@ -263,14 +263,23 @@
                   id="dialogueHighlight"
                   data-style="dialogueHighlight"
                   type="checkbox"
-                />대사에 형광펜 배경</label
+                />대사에 반투명 배경</label
               >
               <p class="help">
-                "대사" 또는 “대사”처럼 큰따옴표로 감싼 부분을 네모난 배경으로
-                강조해요. 긴 대사는 줄마다 이어집니다.
+                "대사" 또는 “대사”처럼 큰따옴표로 감싼 부분에 배경과 어울리는
+                색을 50% 농도로 겹쳐요. 글자색은 유지하고, 긴 대사는 줄마다
+                이어집니다.
               </p>
+              <label class="check"
+                ><input
+                  id="dialogueAutoColor"
+                  data-style="dialogueAutoColor"
+                  type="checkbox"
+                  checked
+                />배경에 맞춰 색상 자동 선택</label
+              >
               <label class="color-field"
-                >형광펜 색<input
+                >대사 배경색<input
                   id="dialogueColor"
                   data-style="dialogueColor"
                   type="color"

@@ -17,7 +17,8 @@
     padding: 64,
     cornerRadius: 0,
     dialogueHighlight: false,
-    dialogueColor: "#ffe08a",
+    dialogueColor: "#657797",
+    dialogueAutoColor: true,
   };
   const FONTS = {
     ridibatang: '"RIDIBatang", "Log Serif", Batang, serif',
@@ -90,12 +91,75 @@
       },
     },
   ];
+  const DIALOGUE_PALETTE = {
+    dusk: "#657797",
+    paper: "#d4c4a5",
+    ink: "#65717f",
+    mist: "#91aabd",
+    wine: "#aa829b",
+    sky: "#777aa7",
+  };
+  const photoColors = new WeakMap();
+  function colorChannels(hex) {
+    return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  }
+  function dialogueThemeColor(style, photo = null) {
+    const rgb1 = colorChannels(style.color1);
+    let base = rgb1;
+    if (
+      style.background === "photo" &&
+      photo &&
+      typeof document !== "undefined"
+    ) {
+      if (!photoColors.has(photo)) {
+        const sample = document.createElement("canvas");
+        sample.width = sample.height = 12;
+        const context = sample.getContext("2d", { willReadFrequently: true });
+        context.drawImage(photo, 0, 0, 12, 12);
+        const data = context.getImageData(0, 0, 12, 12).data;
+        const sum = [0, 0, 0];
+        let alpha = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          const a = data[i + 3] / 255;
+          for (let c = 0; c < 3; c++) sum[c] += data[i + c] * a;
+          alpha += a;
+        }
+        photoColors.set(photo, alpha ? sum.map((c) => c / alpha) : null);
+      }
+      base = photoColors.get(photo) || rgb1;
+    } else {
+      const preset = PRESETS.find(
+        ({ style: s }) =>
+          s.background === style.background &&
+          s.color1 === style.color1 &&
+          (s.background !== "gradient" || s.color2 === style.color2),
+      );
+      if (preset) return DIALOGUE_PALETTE[preset.id];
+      if (style.background === "gradient") {
+        const rgb2 = colorChannels(style.color2);
+        base = rgb1.map((c, i) => (c + rgb2[i]) / 2);
+      }
+    }
+    const ink = colorChannels(style.textColor);
+    return (
+      "#" +
+      base
+        .map((c, i) =>
+          Math.round(c * (1 - style.overlay) * 0.72 + ink[i] * 0.28)
+            .toString(16)
+            .padStart(2, "0"),
+        )
+        .join("")
+    );
+  }
   function normalize(input = {}) {
     const s = { ...DEFAULT };
     for (const key of ["color1", "color2", "textColor", "dialogueColor"])
       if (/^#[\da-f]{6}$/i.test(input[key])) s[key] = input[key];
     if (typeof input.dialogueHighlight === "boolean")
       s.dialogueHighlight = input.dialogueHighlight;
+    if (typeof input.dialogueAutoColor === "boolean")
+      s.dialogueAutoColor = input.dialogueAutoColor;
     const enums = {
       background: ["solid", "gradient", "photo"],
       texture: ["none", "grain", "stars"],
@@ -381,11 +445,10 @@
     ctx.textBaseline = "alphabetic";
     const left = s.padding,
       contentW = WIDTH - left * 2;
-    const rgb = [1, 3, 5]
-      .map((i) => parseInt(s.dialogueColor.slice(i, i + 2), 16) / 255)
-      .map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
-    const luminance = rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
-    const dialogueInk = luminance > 0.179 ? "#000000" : "#ffffff";
+    const dialogueColor =
+      s.dialogueAutoColor !== false
+        ? dialogueThemeColor(s, photo)
+        : s.dialogueColor;
     function draw(units, y, size, highlightsOnly = false) {
       let x = left;
       if (s.align === "center")
@@ -397,13 +460,16 @@
         const height = Math.min(size * 1.2, size * s.lineHeight * 0.96);
         const fill = () => {
           if (start === null) return;
-          ctx.fillStyle = s.dialogueColor;
+          ctx.save();
+          ctx.globalAlpha = 0.5;
+          ctx.fillStyle = dialogueColor;
           ctx.fillRect(
             start - pad,
             y - size * 0.9,
             end - start + pad * 2,
             height,
           );
+          ctx.restore();
           start = null;
         };
         for (const unit of units) {
@@ -418,8 +484,7 @@
       }
       for (const unit of units) {
         ctx.font = font(s, unit, size);
-        ctx.fillStyle =
-          s.dialogueHighlight && unit.dialogue ? dialogueInk : s.textColor;
+        ctx.fillStyle = s.textColor;
         ctx.fillText(unit.text, x, y);
         x += unit.width;
       }
@@ -545,6 +610,7 @@
     inline,
     wrap,
     markDialogue,
+    dialogueThemeColor,
     font,
     layout,
     background,
