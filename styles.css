@@ -358,6 +358,9 @@ svg {
 .font-help {
   margin-bottom: 4px;
 }
+.dialogue-toggle {
+  margin-top: 16px;
+}
 .font-help a {
   color: var(--color-accent);
   text-underline-offset: 3px;

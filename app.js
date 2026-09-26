@@ -138,9 +138,12 @@
     $("font-source").hidden = !info.source;
     if (info.source) $("font-source").href = info.source;
     else $("font-source").removeAttribute("href");
-    document
-      .querySelectorAll("[data-style]")
-      .forEach((input) => (input.value = state.style[input.dataset.style]));
+    document.querySelectorAll("[data-style]").forEach((input) => {
+      if (input.type === "checkbox")
+        input.checked = state.style[input.dataset.style];
+      else input.value = state.style[input.dataset.style];
+    });
+    $("dialogueColor").disabled = !state.style.dialogueHighlight;
     for (const [key] of sliders) $(key + "-number").value = state.style[key];
     document
       .querySelectorAll('[name="align"]')
@@ -514,7 +517,12 @@
   document.querySelectorAll("[data-style]").forEach((input) =>
     input.addEventListener("input", () => {
       const key = input.dataset.style;
-      let value = input.type === "range" ? Number(input.value) : input.value;
+      let value =
+        input.type === "checkbox"
+          ? input.checked
+          : input.type === "range"
+            ? Number(input.value)
+            : input.value;
       if (key === "background" && value === "photo" && !photo) {
         input.value = state.style.background;
         $("photo").click();

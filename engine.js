@@ -16,6 +16,8 @@
     align: "left",
     padding: 64,
     cornerRadius: 0,
+    dialogueHighlight: false,
+    dialogueColor: "#ffe08a",
   };
   const FONTS = {
     ridibatang: '"RIDIBatang", "Log Serif", Batang, serif',
@@ -90,8 +92,10 @@
   ];
   function normalize(input = {}) {
     const s = { ...DEFAULT };
-    for (const key of ["color1", "color2", "textColor"])
+    for (const key of ["color1", "color2", "textColor", "dialogueColor"])
       if (/^#[\da-f]{6}$/i.test(input[key])) s[key] = input[key];
+    if (typeof input.dialogueHighlight === "boolean")
+      s.dialogueHighlight = input.dialogueHighlight;
     const enums = {
       background: ["solid", "gradient", "photo"],
       texture: ["none", "grain", "stars"],
@@ -150,6 +154,35 @@
     const units = inline(text).flatMap((run) =>
       chars(run.text).map((text) => ({ ...run, text })),
     );
+    return wrapUnits(units, width, measure);
+  }
+  // Annotate matched quotations before wrapping, so dialogue survives manual
+  // line breaks and pagination. An unmatched quote never colors the remainder.
+  function markDialogue(units) {
+    let opening = -1,
+      closing = null,
+      escaped = false;
+    for (let i = 0; i < units.length; i++) {
+      const ch = units[i].text;
+      if (ch === "\\") {
+        escaped = !escaped;
+        continue;
+      }
+      if (!escaped) {
+        if (opening < 0 && (ch === '"' || ch === "“")) {
+          opening = i;
+          closing = ch === '"' ? '"' : "”";
+        } else if (opening >= 0 && ch === closing) {
+          for (let j = opening; j <= i; j++) units[j].dialogue = true;
+          opening = -1;
+          closing = null;
+        }
+      }
+      escaped = false;
+    }
+    return units;
+  }
+  function wrapUnits(units, width, measure) {
     for (const unit of units) unit.width = measure(unit);
     let current = [],
       used = 0;
@@ -193,8 +226,22 @@
     const lineH = style.fontSize * style.lineHeight,
       width = WIDTH - style.padding * 2;
     const rows = [];
-    for (const paragraph of text.replace(/\r\n?/g, "\n").trim().split("\n")) {
-      if (!paragraph.trim()) {
+    const paragraphs = text
+      .replace(/\r\n?/g, "\n")
+      .trim()
+      .split("\n")
+      .map((paragraph) => {
+        const source = paragraph
+          .replace(/^\s*>\s?(.*)$/u, "“$1”")
+          .replace(/\t/g, "    ");
+        return inline(source).flatMap((run) =>
+          chars(run.text).map((text) => ({ ...run, text })),
+        );
+      });
+    if (style.dialogueHighlight)
+      markDialogue(paragraphs.flatMap((units) => [...units, { text: "\n" }]));
+    for (const units of paragraphs) {
+      if (!units.some((unit) => unit.text.trim())) {
         rows.push({
           units: [],
           height: lineH * style.paragraphGap,
@@ -202,10 +249,7 @@
         });
         continue;
       }
-      const source = paragraph
-        .replace(/^\s*>\s?(.*)$/u, "“$1”")
-        .replace(/\t/g, "    ");
-      const lines = wrap(source, width, (unit) =>
+      const lines = wrapUnits(units, width, (unit) =>
         measure(unit, style.fontSize),
       );
       for (const units of lines)
@@ -337,17 +381,57 @@
     ctx.textBaseline = "alphabetic";
     const left = s.padding,
       contentW = WIDTH - left * 2;
-    function draw(units, y, size) {
+    const rgb = [1, 3, 5]
+      .map((i) => parseInt(s.dialogueColor.slice(i, i + 2), 16) / 255)
+      .map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+    const luminance = rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
+    const dialogueInk = luminance > 0.179 ? "#000000" : "#ffffff";
+    function draw(units, y, size, highlightsOnly = false) {
       let x = left;
       if (s.align === "center")
         x += (contentW - units.reduce((n, u) => n + u.width, 0)) / 2;
+      if (highlightsOnly) {
+        let start = null,
+          end = x;
+        const pad = size * 0.14;
+        const height = Math.min(size * 1.2, size * s.lineHeight * 0.96);
+        const fill = () => {
+          if (start === null) return;
+          ctx.fillStyle = s.dialogueColor;
+          ctx.fillRect(
+            start - pad,
+            y - size * 0.9,
+            end - start + pad * 2,
+            height,
+          );
+          start = null;
+        };
+        for (const unit of units) {
+          if (unit.dialogue) {
+            if (start === null) start = x;
+            end = x + unit.width;
+          } else fill();
+          x += unit.width;
+        }
+        fill();
+        return;
+      }
       for (const unit of units) {
         ctx.font = font(s, unit, size);
+        ctx.fillStyle =
+          s.dialogueHighlight && unit.dialogue ? dialogueInk : s.textColor;
         ctx.fillText(unit.text, x, y);
         x += unit.width;
       }
     }
     let y = s.padding + s.fontSize;
+    if (s.dialogueHighlight) {
+      for (const row of page.rows) {
+        if (!row.blank) draw(row.units, y, s.fontSize, true);
+        y += row.height;
+      }
+      y = s.padding + s.fontSize;
+    }
     for (const row of page.rows) {
       if (!row.blank) draw(row.units, y, s.fontSize);
       y += row.height;
@@ -460,6 +544,7 @@
     chars,
     inline,
     wrap,
+    markDialogue,
     font,
     layout,
     background,
